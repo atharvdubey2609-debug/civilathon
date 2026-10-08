@@ -1,0 +1,103 @@
+{% extends 'page.html' %}
+{% block content %}
+<div class="registration-shell">
+  <div class="registration-intro">
+    <span class="eyebrow">CIVILATHON REGISTRATION</span>
+    <h1>Turn your civil engineering idea into an entry.</h1>
+    <p class="lead-dark">Complete the form below, describe your idea and upload your final PPT/PPTX. A unique registration ID will be generated automatically.</p>
+  </div>
+
+  <div class="fees">
+    <div><small>TEAM PARTICIPATION</small><strong>₹149</strong><span>per team · up to 4 members</span></div>
+    <div><small>INDIVIDUAL PARTICIPATION</small><strong>₹49</strong><span>per participant</span></div>
+  </div>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <div class="flash-stack">
+        {% for category, message in messages %}
+          <div class="flash {{ category }}">{{ message }}</div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
+
+  <form class="registration-form" method="POST" enctype="multipart/form-data">
+    <section class="form-section">
+      <div class="section-number">01</div>
+      <div class="form-section-content">
+        <h2>Participation details</h2>
+        <p>Select how you are participating.</p>
+        <div class="choice-grid">
+          <label class="choice-card"><input type="radio" name="participation_type" value="team" checked><span><strong>Team</strong><small>Up to 4 members · ₹149</small></span></label>
+          <label class="choice-card"><input type="radio" name="participation_type" value="individual"><span><strong>Individual</strong><small>Single participant · ₹49</small></span></label>
+        </div>
+        <div class="form-grid two-col">
+          <label id="team-name-field">Team Name<input type="text" name="team_name" placeholder="e.g. BuildVision" data-team-required></label>
+          <label>College / Institution *<input type="text" name="college" required placeholder="College name"></label>
+        </div>
+      </div>
+    </section>
+
+    <section class="form-section">
+      <div class="section-number">02</div>
+      <div class="form-section-content">
+        <h2>Participant details</h2>
+        <div class="form-grid two-col">
+          <label>Team Leader / Participant Name *<input type="text" name="leader_name" required placeholder="Full name"></label>
+          <label>Mobile Number *<input type="tel" name="leader_mobile" required placeholder="10-digit mobile number"></label>
+          <label>Email Address *<input type="email" name="leader_email" required placeholder="you@example.com"></label>
+          <label>Member 2<input type="text" name="member_2" placeholder="Full name"></label>
+          <label>Member 3<input type="text" name="member_3" placeholder="Full name"></label>
+          <label>Member 4<input type="text" name="member_4" placeholder="Full name"></label>
+        </div>
+        <p class="form-note">For individual participation, additional member fields are ignored.</p>
+      </div>
+    </section>
+
+    <section class="form-section">
+      <div class="section-number">03</div>
+      <div class="form-section-content">
+        <h2>Idea details</h2>
+        <div class="form-grid">
+          <label>Research Domain *<select name="research_domain" required><option value="">Select a domain</option>{% for domain in domains %}<option value="{{ domain }}">{{ domain }}</option>{% endfor %}</select></label>
+          <label>Problem Statement *<textarea name="problem_statement" required rows="4" placeholder="What real civil engineering problem are you addressing?"></textarea></label>
+          <label>Proposed Solution *<textarea name="proposed_solution" required rows="4" placeholder="Explain your proposed solution and how it works."></textarea></label>
+          <label>Innovation *<textarea name="innovation" required rows="4" placeholder="What makes your approach different, better or more practical?"></textarea></label>
+          <label>Expected Impact *<textarea name="expected_impact" required rows="4" placeholder="Explain expected technical, economic, environmental or social impact."></textarea></label>
+        </div>
+      </div>
+    </section>
+
+    <section class="form-section">
+      <div class="section-number">04</div>
+      <div class="form-section-content">
+        <h2>PPT submission</h2>
+        <p>Upload your final presentation. Prototype submission is not compulsory.</p>
+        <label class="upload-box">Final PPT / PPTX *<input type="file" name="ppt" accept=".ppt,.pptx" required><span>Choose a .ppt or .pptx file · Maximum 25 MB</span></label>
+        <div class="notice"><strong>Before submitting:</strong> Check your team details, idea description and presentation carefully. Your registration ID will be generated after successful submission.</div>
+      </div>
+    </section>
+
+    <div class="form-actions">
+      <button class="btn btn-primary" type="submit">Continue to Payment</button>
+      <p>After you submit, your PPT is securely stored and you will be taken to the Razorpay payment screen. Your registration becomes active after successful payment verification.</p>
+    </div>
+  </form>
+</div>
+
+<script>
+  const typeInputs = document.querySelectorAll('input[name="participation_type"]');
+  const teamField = document.getElementById('team-name-field');
+  const teamInput = document.querySelector('[data-team-required]');
+  const memberInputs = ['member_2','member_3','member_4'].map(n => document.querySelector(`input[name="${n}"]`));
+  function updateParticipation() {
+    const team = document.querySelector('input[name="participation_type"]:checked').value === 'team';
+    teamField.style.display = team ? '' : 'none';
+    teamInput.required = team;
+    memberInputs.forEach(input => input.disabled = !team);
+  }
+  typeInputs.forEach(input => input.addEventListener('change', updateParticipation));
+  updateParticipation();
+</script>
+{% endblock %}

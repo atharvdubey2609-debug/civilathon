@@ -1,0 +1,104 @@
+{% extends 'page.html' %}
+{% block content %}
+<div class="registration-shell payment-shell">
+  <div class="registration-intro">
+    <span class="eyebrow">SECURE PAYMENT</span>
+    <h1>Complete your Civilathon registration.</h1>
+    <p class="lead-dark">Your PPT has been received and your registration has been created. Complete the entry payment below to activate your submission.</p>
+  </div>
+
+  <div class="payment-layout">
+    <div class="payment-card payment-summary">
+      <span class="summary-label">REGISTRATION</span>
+      <strong class="registration-code">{{ registration['registration_id'] }}</strong>
+      <div class="summary-row"><span>Participant</span><strong>{{ registration['leader_name'] }}</strong></div>
+      <div class="summary-row"><span>College</span><strong>{{ registration['college'] }}</strong></div>
+      <div class="summary-row"><span>Participation</span><strong>{{ registration['participation_type']|title }}</strong></div>
+      <div class="summary-row"><span>PPT</span><strong>{{ registration['ppt_filename'] }}</strong></div>
+      <div class="summary-row total"><span>Entry Fee</span><strong>₹{{ '%.0f'|format(amount) }}</strong></div>
+    </div>
+
+    <div class="payment-card payment-action-card">
+      <div class="secure-mark">RAZORPAY</div>
+      <h2>Pay securely</h2>
+      <p>Cards, UPI, net banking and supported payment methods will be shown by Razorpay.</p>
+      {% if razorpay_enabled %}
+        <button id="pay-btn" class="btn btn-primary payment-btn">Pay ₹{{ '%.0f'|format(amount) }}</button>
+        <p id="payment-status" class="payment-status">You will be redirected to the secure Razorpay checkout.</p>
+      {% else %}
+        <div class="notice payment-config-notice">
+          <strong>Payment gateway setup required.</strong>
+          <p>The registration portal is active, but Razorpay keys have not been added to this computer yet.</p>
+          <p>Add <code>RAZORPAY_KEY_ID</code> and <code>RAZORPAY_KEY_SECRET</code> as environment variables, restart Flask, and this button will become active.</p>
+        </div>
+      {% endif %}
+      <a class="back-link" href="{{ url_for('register') }}">← Back to registration</a>
+    </div>
+  </div>
+</div>
+
+{% if razorpay_enabled %}
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script>
+const payBtn = document.getElementById('pay-btn');
+const statusEl = document.getElementById('payment-status');
+const registrationId = {{ registration['registration_id']|tojson }};
+
+payBtn.addEventListener('click', async () => {
+  payBtn.disabled = true;
+  payBtn.textContent = 'Preparing secure checkout…';
+  statusEl.textContent = 'Creating your secure payment order…';
+  try {
+    const orderResponse = await fetch(`/api/create-order/${registrationId}`, { method: 'POST' });
+    const order = await orderResponse.json();
+    if (!order.ok) throw new Error(order.message || 'Could not create payment order.');
+
+    const options = {
+      key: order.key_id,
+      amount: order.amount,
+      currency: order.currency,
+      name: 'CIVILATHON',
+      description: `Civilathon entry — ${registrationId}`,
+      order_id: order.order_id,
+      prefill: {
+        name: order.name,
+        email: order.email,
+        contact: order.contact
+      },
+      notes: { registration_id: registrationId },
+      theme: { color: '#b38b45' },
+      handler: async function (response) {
+        statusEl.textContent = 'Verifying payment…';
+        const verifyResponse = await fetch(`/api/verify-payment/${registrationId}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(response)
+        });
+        const result = await verifyResponse.json();
+        if (!result.ok) throw new Error(result.message || 'Payment verification failed.');
+        window.location.href = result.redirect;
+      },
+      modal: {
+        ondismiss: function () {
+          payBtn.disabled = false;
+          payBtn.textContent = `Pay ₹{{ '%.0f'|format(amount) }}`;
+          statusEl.textContent = 'Checkout closed. Your registration remains saved and payment can be retried.';
+        }
+      }
+    };
+    const rzp = new Razorpay(options);
+    rzp.on('payment.failed', function (response) {
+      payBtn.disabled = false;
+      payBtn.textContent = `Pay ₹{{ '%.0f'|format(amount) }}`;
+      statusEl.textContent = response.error?.description || 'Payment failed. Please try again.';
+    });
+    rzp.open();
+  } catch (error) {
+    payBtn.disabled = false;
+    payBtn.textContent = `Pay ₹{{ '%.0f'|format(amount) }}`;
+    statusEl.textContent = error.message;
+  }
+});
+</script>
+{% endif %}
+{% endblock %}

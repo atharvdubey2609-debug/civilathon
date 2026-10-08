@@ -1,0 +1,22 @@
+{% extends 'page.html' %}
+{% block content %}
+{% if registration['payment_status'] != 'Paid' %}<div class="notice pending-payment"><strong>Payment is still pending.</strong> Complete payment from the payment page before treating this registration as confirmed.</div>{% endif %}
+<section class="success-page">
+  <div class="success-card">
+    <span class="eyebrow">SUBMISSION RECEIVED</span>
+    <h1>Registration submitted successfully.</h1>
+    <p class="lead-dark">Your details and PPT have been saved. Keep the registration ID below for future communication.</p>
+    <div class="registration-id"><small>YOUR REGISTRATION ID</small><strong>{{ registration['registration_id'] }}</strong></div>
+    <div class="success-grid">
+      <div><span>Participant / Leader</span><strong>{{ registration['leader_name'] }}</strong></div>
+      <div><span>College</span><strong>{{ registration['college'] }}</strong></div>
+      <div><span>Participation</span><strong>{{ registration['participation_type']|title }}</strong></div>
+      <div><span>Payment Status</span><strong>{{ registration['payment_status'] }}</strong></div>
+      <div><span>Research Domain</span><strong>{{ registration['research_domain'] }}</strong></div>
+      <div><span>PPT</span><strong>{{ registration['ppt_filename'] }}</strong></div>
+    </div>
+    <div class="notice"><strong>Important:</strong> Payment is currently marked as Pending. Razorpay/payment verification will be connected in the next stage.</div>
+    <a class="btn btn-primary" href="{{ url_for('home') }}">Back to Civilathon</a>
+  </div>
+</section>
+{% endblock %}
