@@ -1,4 +1,7 @@
 venv/
-.env
+.idea/
 __pycache__/
 *.pyc
+.env
+civilathon.db
+uploads/ppt/
